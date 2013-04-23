@@ -1,0 +1,5 @@
+
+# puush-linux uses the tweetbot api
+# copy apiKey from http://puush.me/account/settings
+
+apiKey = ''
