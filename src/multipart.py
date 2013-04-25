@@ -20,8 +20,8 @@ def post_multipart(host, selector, fields=[], files=[], basicAuth=None):
     h = httplib.HTTP(host)
     h.putrequest('POST', selector)
     h.putheader('Host', host)
- 
-   if basicAuth:
+
+    if basicAuth:
         # basicAuth should be a tuple (username, password)
         auth = base64.b64encode("%s:%s" % basicAuth)
         h.putheader('Authorization','Basic ' + auth)
