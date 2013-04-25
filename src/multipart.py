@@ -19,7 +19,9 @@ def post_multipart(host, selector, fields=[], files=[], basicAuth=None):
     content_type, body = encode_multipart_formdata(fields, files)
     h = httplib.HTTP(host)
     h.putrequest('POST', selector)
-    if basicAuth:
+    h.putheader('Host', host)
+ 
+   if basicAuth:
         # basicAuth should be a tuple (username, password)
         auth = base64.b64encode("%s:%s" % basicAuth)
         h.putheader('Authorization','Basic ' + auth)

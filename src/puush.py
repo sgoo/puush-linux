@@ -37,7 +37,7 @@ def _postSS(screenshot):
 	# build file list
 	fileList = [('media', fileName, picBuf.getvalue())]
 
-	link = multipart.post_multipart(SERVER, 'http://%s%s' % (SERVER, API_END_POINT), files=fileList, basicAuth=basicAuth)
+	link = multipart.post_multipart(SERVER, API_END_POINT, files=fileList, basicAuth=basicAuth)
 	# link = "<mediaurl>http://puu.sh/2ES4o.png</mediaurl>"
 	print link
 	
