@@ -1,7 +1,7 @@
 puush-linux
 ===========
 
-# INSTALL
+## INSTALL
 1. `git clone git@github.com:ratcateme/puush-linux.git`
 
 2. `cd puush-linux/src`
