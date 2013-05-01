@@ -7,10 +7,13 @@ import gtk
 import os
 import pynotify
 
+NO_INTERNET = False
+
 SERVER = 'puush.me'
 API_END_POINT = '/api/tb'
 FORMAT = 'png'
 
+NOTIFY_TIMEOUT = 10
 def screenshot(x, y, w, h):
 
 	screenshot = gtk.gdk.Pixbuf.get_from_drawable(gtk.gdk.Pixbuf(gtk.gdk.COLORSPACE_RGB, True, 8, w, h),
@@ -37,13 +40,21 @@ def _postSS(screenshot):
 	# build file list
 	fileList = [('media', fileName, picBuf.getvalue())]
 
-	link = multipart.post_multipart(SERVER, API_END_POINT, files=fileList, basicAuth=basicAuth)
-	# link = "<mediaurl>http://puu.sh/2ES4o.png</mediaurl>"
+	if NO_INTERNET:
+		link = "<mediaurl>http://puu.sh/2ES4oa.png</mediaurl>"
+	else:
+		link = multipart.post_multipart(SERVER, API_END_POINT, files=fileList, basicAuth=basicAuth)
+
 	print link
-	
+
+
+
+
+	_notify(link[10:len(link) - 11])
+
+def _notify(link):
 	# link looks like "<mediaurl>http://puu.sh/2ES4o.png</mediaurl>"
 	# strip open and close tags
-	link = link[10:len(link) - 11]
 
 	clip = gtk.clipboard_get ('CLIPBOARD')
 
@@ -51,15 +62,17 @@ def _postSS(screenshot):
 	clip.store()
 
 	if pynotify.init("puush"):
-		n = pynotify.Notification("Puush completed", link)
-		with open(os.path.dirname(__file__) + '/icon.png') as logo:
-			loader = gtk.gdk.PixbufLoader('png')
-			loader.write(logo.read())
-			loader.close()
-			n.set_icon_from_pixbuf(loader.get_pixbuf())
+
+		uri = "file://" + os.path.dirname(__file__) + '/icon.png'
+		
+		n = pynotify.Notification("Puush completed", link, uri)
+
 		n.show()
+		time.sleep(NOTIFY_TIMEOUT)
+		n.close()
 	else:
 		print "Error starting pynotify"
+
 
 	
 def _saveToBuf(buf, d):
