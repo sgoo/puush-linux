@@ -48,14 +48,11 @@ def _postSS(screenshot):
 	print link
 
 
-
-
+	# link looks like "<mediaurl>http://puu.sh/2ES4o.png</mediaurl>"
+	# strip open and close tags
 	_notify(link[10:len(link) - 11])
 
 def _notify(link):
-	# link looks like "<mediaurl>http://puu.sh/2ES4o.png</mediaurl>"
-	# strip open and close tags
-
 	clip = gtk.clipboard_get ('CLIPBOARD')
 
 	clip.set_text(link, -1)
