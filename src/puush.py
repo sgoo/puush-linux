@@ -6,6 +6,7 @@ import StringIO
 import gtk
 import os
 import pynotify
+import subprocess
 
 NO_INTERNET = False
 
@@ -53,10 +54,14 @@ def _postSS(screenshot):
 	_notify(link[10:len(link) - 11])
 
 def _notify(link):
-	clip = gtk.clipboard_get ('CLIPBOARD')
-
-	clip.set_text(link, -1)
-	clip.store()
+	try:
+		cmd='echo ' + link.strip()+'| xclip -selection c.'
+		subprocess.check_call(cmd, shell=True)
+	# The error for 'command not found' is subprocess.CalledProcessError
+	except Exception as e:
+		clip = gtk.clipboard_get ('CLIPBOARD')
+		clip.set_text(link, -1)
+		clip.store()
 
 	if pynotify.init("puush"):
 
