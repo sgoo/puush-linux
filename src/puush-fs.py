@@ -1,9 +1,8 @@
 #!/usr/bin/env python
-import gtk.gdk
-import puush
 
-# Calculate the size of the whole screen
-screenw = gtk.gdk.screen_width()
-screenh = gtk.gdk.screen_height()
+from gtk.gdk import screen_width, screen_height
 
-puush.screenshot(0, 0, screenw, screenh)
+from puush import screenshot
+
+
+screenshot(0, 0, screen_width(), screen_height())
