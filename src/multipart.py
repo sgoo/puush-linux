@@ -1,5 +1,5 @@
 
-from httplib import HTTP
+from httplib import HTTPS
 from base64 import b64encode
 from mimetypes import guess_type
 
@@ -17,7 +17,7 @@ def post_multipart(host, selector, fields=[], files=[], basicAuth=None):
     """
     try:
         content_type, body = encode_multipart_formdata(fields, files)
-        h = HTTP(host)
+        h = HTTPS(host)
         h.putrequest('POST', selector)
         h.putheader('Host', host)
 
