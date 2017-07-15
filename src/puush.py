@@ -1,81 +1,71 @@
-import config
-import time
-import multipart
-import StringIO
-# from gi.repository import Gtk, Gdk
+
 import gtk
-import os
-import pynotify
-import subprocess
+from os.path import dirname
+from StringIO import StringIO
+from time import sleep, strftime
+from subprocess import check_call
+from multipart import post_multipart
+from pynotify import init, Notification
 
-NO_INTERNET = False
+import config
 
-SERVER = 'puush.me'
-API_END_POINT = '/api/tb'
+
 FORMAT = 'png'
-
 NOTIFY_TIMEOUT = 10
+
+
 def screenshot(x, y, w, h):
+	screenshot = gtk.gdk.Pixbuf.get_from_drawable(gtk.gdk.Pixbuf(gtk.gdk.COLORSPACE_RGB, True, 8, w, h), gtk.gdk.get_default_root_window(), gtk.gdk.colormap_get_system(), x, y, 0, 0, w, h)
 
-	screenshot = gtk.gdk.Pixbuf.get_from_drawable(gtk.gdk.Pixbuf(gtk.gdk.COLORSPACE_RGB, True, 8, w, h),
-		gtk.gdk.get_default_root_window(),
-		gtk.gdk.colormap_get_system(),
-		x, y, 0, 0, w, h)
-
-	_postSS(screenshot)
-
-
-def _postSS(screenshot):
-
-	fileName = time.strftime('ss (%Y-%m-%d at %H.%M.%S).' + FORMAT)
-
-	# split the apiKey for the basicAuth
+	# Split the apiKey for the basicAuth
 	config.apiKey = config.apiKey.lower()
-	l = int(len(config.apiKey)/2)
+	l = int(len(config.apiKey) / 2)
 	basicAuth = (config.apiKey[:l], config.apiKey[l:])
 
-	# save file into buf
-	picBuf = StringIO.StringIO()
-	screenshot.save_to_callback(_saveToBuf, FORMAT, {}, {'buf' :picBuf})
+	# Save file into the buffer
+	pictureBuffer = StringIO()
+	screenshot.save_to_callback(_saveToBuf, FORMAT, {}, {'buffer': pictureBuffer})
 
-	# build file list
-	fileList = [('media', fileName, picBuf.getvalue())]
+	link = post_multipart('puush.me', '/api/tb', files=[('media', strftime('ss (%Y-%m-%d at %H.%M.%S).' + FORMAT), pictureBuffer.getvalue())], basicAuth=basicAuth)
 
-	if NO_INTERNET:
-		link = "<mediaurl>http://puu.sh/2ES4oa.png</mediaurl>"
-	else:
-		link = multipart.post_multipart(SERVER, API_END_POINT, files=fileList, basicAuth=basicAuth)
+	# At this step, the link looks like '<mediaurl>http://puu.sh/2ES4o.png</mediaurl>'
+	if link and link != 'Unauthorized':
+		link = link.partition('<mediaurl>')[2].rpartition('</mediaurl>')[0]
 
-	print link
+	# Notify the user with the link provided (or an error, see below !)
+	_notify(link)
 
-
-	# link looks like "<mediaurl>http://puu.sh/2ES4o.png</mediaurl>"
-	# strip open and close tags
-	_notify(link[10:len(link) - 11])
 
 def _notify(link):
-	try:
-		cmd='echo ' + link.strip()+'| xclip -selection c.'
-		subprocess.check_call(cmd, shell=True)
-	# The error for 'command not found' is subprocess.CalledProcessError
-	except Exception as e:
-		clip = gtk.clipboard_get ('CLIPBOARD')
-		clip.set_text(link, -1)
-		clip.store()
+	if link and link != 'Unauthorized':
+		try:
+			cmd = 'echo ' + link.strip() + ' | xclip -selection c.'
+			check_call(cmd, shell=True)
 
-	if pynotify.init("puush"):
+		# The error for 'command not found' is subprocess.CalledProcessError
+		except Exception as e:
+			clip = gtk.clipboard_get('CLIPBOARD')
+			clip.set_text(link, -1)
+			clip.store()
 
-		uri = "file://" + os.path.dirname(__file__) + '/icon.png'
-		
-		n = pynotify.Notification("Puush completed", link, uri)
+	if init('puush'):
+		if not link:
+			n = Notification('Puush failed', 'You should check your Internet connection', 'file://' + dirname(__file__) + '/error.png')
+
+		else:
+			if link == 'Unauthorized':
+				n = Notification('Puush failed', 'Your API key has been rejected', 'file://' + dirname(__file__) + '/warning.png')
+
+			else:
+				n = Notification('Puush completed', link, 'file://' + dirname(__file__) + '/success.png')
 
 		n.show()
-		time.sleep(NOTIFY_TIMEOUT)
+		sleep(NOTIFY_TIMEOUT)
 		n.close()
+
 	else:
-		print "Error starting pynotify"
+		print 'Error starting PyNotify'
 
 
-	
-def _saveToBuf(buf, d):
-	d['buf'].write(buf)
+def _saveToBuf(buffer, d):
+	d['buffer'].write(buffer)

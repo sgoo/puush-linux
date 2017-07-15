@@ -1,5 +1,5 @@
 
-# puush-linux uses the tweetbot api
-# copy apiKey from http://puush.me/account/settings
+# Puush-Linux uses the Tweetbot API
+# Copy your API key from <http://puush.me/account/settings>
 
 apiKey = ''
